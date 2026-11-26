@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Поиск лекарств — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<section class="search-panel">
+
+    <span class="subtitle">{{ app_name }}</span>
+
+    <h1>Найдите нужное лекарство</h1>
+
+    <p>
+        Введите название лекарства,
+        чтобы узнать его место хранения.
+    </p>
+
+    <form method="get" action="{{ url_for('main.index') }}">
+
+        <input
+            type="search"
+            name="q"
+            aria-label="Название лекарства"
+            placeholder="Например, Но-шпа"
+            value="{{ query }}"
+            required
+        >
+
+        <button type="submit">Найти</button>
+
+    </form>
+
+    {% if query %}
+        <div class="notice">
+            Поисковый запрос: <strong>{{ query }}</strong>.
+            База лекарств пока не подключена.
+        </div>
+    {% endif %}
+
+</section>
+
+{% endblock %}

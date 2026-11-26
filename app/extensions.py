@@ -6,6 +6,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase
 
+from flask_wtf.csrf import CSRFProtect
 
 class Base(DeclarativeBase):
     pass
@@ -13,6 +14,7 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 migrate = Migrate()
+csrf = CSRFProtect()
 
 
 @event.listens_for(Engine, "connect")

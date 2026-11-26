@@ -17,13 +17,36 @@
 <body>
 
     <header class="header">
-        <a class="brand" href="{{ url_for('main.index') }}">
-            PharmaMap
+    <a class="brand" href="{{ url_for('main.index') }}">
+        PharmaMap
+    </a>
+
+    <nav class="navigation">
+        <a href="{{ url_for('main.index') }}">
+            Поиск
         </a>
-    </header>
+
+        <a href="{{ url_for('storage.index') }}">
+            Моя аптека
+        </a>
+    </nav>
+</header>
 
     <main class="container">
-        {% block content %}{% endblock %}
+        {% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+{% endwith %}
+        {% block content %}
+        
+        {% endblock %}
     </main>
 
     <footer>

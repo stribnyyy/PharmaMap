@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Моя аптека — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+    <h1>Моя аптека</h1>
+    <span>Шкафов: {{ cabinets | length }}</span>
+</div>
+
+<section class="cabinet-grid">
+
+    {% for cabinet in cabinets %}
+
+        <article class="cabinet-card">
+
+            <div class="cabinet-icon">
+                🗄️
+            </div>
+
+            <h2>{{ cabinet.name }}</h2>
+
+            <p>
+                Вложенных элементов:
+                {{ cabinet.children | length }}
+            </p>
+
+            {% if cabinet.description %}
+                <p>{{ cabinet.description }}</p>
+            {% endif %}
+
+        </article>
+
+    {% else %}
+
+        <p>Пока нет ни одного шкафа.</p>
+
+    {% endfor %}
+
+</section>
+
+<section class="storage-panel">
+
+    <h2>Добавить шкаф</h2>
+
+    <form method="post"
+          action="{{ url_for('storage.create') }}">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <input
+            type="text"
+            name="name"
+            placeholder="Например, Шкаф 3"
+            aria-label="Название шкафа"
+            maxlength="150"
+            required
+        >
+
+        <button type="submit">
+            Добавить
+        </button>
+
+    </form>
+
+</section>
+
+{% endblock %}

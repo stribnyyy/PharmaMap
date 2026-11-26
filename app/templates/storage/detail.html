@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ location.name }} — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('storage.index') }}">
+        Моя аптека
+    </a>
+
+    {% for item in path %}
+
+        <span>›</span>
+
+        {% if loop.last %}
+            <strong>{{ item.name }}</strong>
+        {% else %}
+            <a href="{{ url_for(
+                'storage.detail',
+                location_id=item.id
+            ) }}">
+                {{ item.name }}
+            </a>
+        {% endif %}
+
+    {% endfor %}
+
+</nav>
+
+
+<div class="page-heading">
+
+    <div>
+        <span>{{ location_types[location.type] }}</span>
+
+        <h1>{{ location.name }}</h1>
+    </div>
+
+    <span>
+        Объектов: {{ location.children | length }}
+    </span>
+
+</div>
+
+
+{% if location.description %}
+    <p>{{ location.description }}</p>
+{% endif %}
+
+
+<section class="cabinet-grid">
+
+    {% for child in location.children %}
+
+        <article class="cabinet-card">
+
+            <div class="cabinet-icon">
+
+                {% if child.type == "shelf" %}
+                    📚
+                {% elif child.type == "drawer" %}
+                    🗃️
+                {% else %}
+                    📦
+                {% endif %}
+
+            </div>
+
+            <h2>{{ child.name }}</h2>
+
+            <p>
+                {{ location_types[child.type] }}
+            </p>
+
+            <p>
+                Вложенных элементов:
+                {{ child.children | length }}
+            </p>
+
+            <a class="open-location"
+               href="{{ url_for(
+                   'storage.detail',
+                   location_id=child.id
+               ) }}">
+                Открыть →
+            </a>
+
+        </article>
+
+    {% else %}
+
+        <p>Вложенных объектов пока нет.</p>
+
+    {% endfor %}
+
+</section>
+
+
+{% if allowed_types %}
+
+    <section class="storage-panel">
+
+        <h2>Добавить место хранения</h2>
+
+        <form class="location-form"
+              method="post"
+              action="{{ url_for(
+                  'storage.create_child',
+                  location_id=location.id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <label for="location-type">
+                Тип объекта
+            </label>
+
+            <select id="location-type" name="type">
+
+                {% for type in allowed_types %}
+
+                    <option value="{{ type }}">
+                        {{ location_types[type] }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <label for="location-name">
+                Название
+            </label>
+
+            <input
+                id="location-name"
+                type="text"
+                name="name"
+                placeholder="Название места хранения"
+                maxlength="150"
+                required
+            >
+
+            <button type="submit">
+                Добавить
+            </button>
+
+        </form>
+
+    </section>
+
+{% endif %}
+
+
+<section class="storage-panel">
+
+    <h2>Лекарства</h2>
+
+    {% for placement in location.placements %}
+
+        <div class="medicine-row">
+
+            <strong>
+                {{ placement.medicine.name }}
+            </strong>
+
+            {{ placement.medicine.dosage or "" }}
+
+        </div>
+
+    {% else %}
+
+        <p>Нет назначенных лекарств.</p>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

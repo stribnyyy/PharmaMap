@@ -21,7 +21,15 @@
                 🗄️
             </div>
 
-            <h2>{{ cabinet.name }}</h2>
+            <h2>
+    <a class="location-link"
+       href="{{ url_for(
+           'storage.detail',
+           location_id=cabinet.id
+       ) }}">
+        {{ cabinet.name }}
+    </a>
+</h2>
 
             <p>
                 Вложенных элементов:
@@ -32,6 +40,13 @@
                 <p>{{ cabinet.description }}</p>
             {% endif %}
 
+            <a class="open-location"
+   href="{{ url_for(
+       'storage.detail',
+       location_id=cabinet.id
+   ) }}">
+    Открыть →
+</a>
         </article>
 
     {% else %}

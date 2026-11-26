@@ -218,3 +218,71 @@ footer {
         font-size: 16px;
     }
 }
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.breadcrumbs a,
+.location-link {
+    color: #176b60;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover,
+.location-link:hover {
+    text-decoration: underline;
+}
+
+.open-location {
+    display: block;
+    margin-top: 16px;
+    color: #176b60;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.open-location:hover {
+    text-decoration: underline;
+}
+
+.location-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.location-form label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.location-form select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ccd5d8;
+    border-radius: 8px;
+    background: white;
+    font-size: 16px;
+}
+
+.location-form button {
+    align-self: flex-start;
+}
+
+.medicine-row {
+    padding: 16px;
+    border-bottom: 1px solid #e0e7e7;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .location-form button {
+        width: 100%;
+    }
+}

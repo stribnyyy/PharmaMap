@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Редактирование — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('storage.index') }}">
+        Моя аптека
+    </a>
+
+    <span>›</span>
+
+    <a href="{{ url_for(
+        'storage.detail',
+        location_id=location.id
+    ) }}">
+        {{ location.name }}
+    </a>
+
+    <span>›</span>
+
+    <strong>Редактирование</strong>
+
+</nav>
+
+<section class="storage-panel">
+
+    <h1>Редактирование места хранения</h1>
+
+    <form class="location-form"
+          method="post"
+          action="{{ url_for(
+              'storage.edit',
+              location_id=location.id
+          ) }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <label for="name">
+            Название
+        </label>
+
+        <input
+            id="name"
+            type="text"
+            name="name"
+            value="{{ location.name }}"
+            maxlength="150"
+            required
+        >
+
+        <label for="description">
+            Описание
+        </label>
+
+        <textarea
+            id="description"
+            name="description"
+            rows="4"
+            maxlength="1000"
+            placeholder="Дополнительная информация"
+        >{{ location.description or "" }}</textarea>
+
+        <div class="location-actions">
+
+            <button type="submit">
+                Сохранить
+            </button>
+
+            <a class="secondary-button"
+               href="{{ url_for(
+                   'storage.detail',
+                   location_id=location.id
+               ) }}">
+                Отмена
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

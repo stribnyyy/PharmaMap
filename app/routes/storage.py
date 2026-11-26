@@ -16,6 +16,8 @@ from app.services.storage import (
     get_allowed_children,
     get_location_path,
     create_child_location,
+    update_location,
+    delete_location,
     LOCATION_TYPES
 )
 
@@ -101,3 +103,103 @@ def create_child(location_id):
         ),
         code=303
     )
+
+@storage_bp.route(
+    "/<int:location_id>/edit",
+    methods=["GET", "POST"]
+)
+def edit(location_id):
+
+    location = db.get_or_404(
+        Location,
+        location_id
+    )
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "")
+        description = request.form.get(
+            "description", ""
+        )
+
+        try:
+            update_location(
+                location,
+                name,
+                description
+            )
+
+            flash(
+                "Изменения успешно сохранены.",
+                "success"
+            )
+
+            return redirect(
+                url_for(
+                    "storage.detail",
+                    location_id=location_id
+                ),
+                code=303
+            )
+
+        except ValueError as error:
+            flash(str(error), "error")
+
+            return redirect(
+                url_for(
+                    "storage.edit",
+                    location_id=location_id
+                ),
+                code=303
+            )
+
+    return render_template(
+        "storage/edit.html",
+        location=location
+    )
+
+@storage_bp.post("/<int:location_id>/delete")
+def delete(location_id):
+
+    location = db.get_or_404(
+        Location,
+        location_id
+    )
+
+    parent_id = location.parent_id
+
+    try:
+        delete_location(location)
+
+        flash(
+            "Место хранения успешно удалено.",
+            "success"
+        )
+
+    except ValueError as error:
+
+        flash(str(error), "error")
+
+        return redirect(
+            url_for(
+                "storage.detail",
+                location_id=location_id
+            ),
+            code=303
+        )
+
+    if parent_id is None:
+
+        return redirect(
+            url_for("storage.index"),
+            code=303
+        )
+
+    return redirect(
+        url_for(
+            "storage.detail",
+            location_id=parent_id
+        ),
+        code=303
+    )
+

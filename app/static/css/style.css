@@ -286,3 +286,73 @@ footer {
         width: 100%;
     }
 }
+
+.location-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.location-actions form {
+    margin: 0;
+}
+
+.button-link,
+.secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+.button-link {
+    background: #176b60;
+    color: white;
+}
+
+.button-link:hover {
+    background: #12564d;
+}
+
+.secondary-button {
+    background: #edf1f2;
+    color: #233238;
+}
+
+.secondary-button:hover {
+    background: #dce4e5;
+}
+
+.danger-button {
+    background: #b91c1c;
+    color: white;
+}
+
+.danger-button:hover {
+    background: #991b1b;
+}
+
+.location-form textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ccd5d8;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 16px;
+    resize: vertical;
+}
+
+@media (max-width: 600px) {
+    .location-actions > * {
+        width: 100%;
+    }
+
+    .location-actions button {
+        width: 100%;
+    }
+}

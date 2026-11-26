@@ -1,5 +1,6 @@
 from app.extensions import db
 from app.models import Location
+from sqlalchemy.exc import IntegrityError
 
 LOCATION_TYPES = {
     "cabinet": "Шкаф",
@@ -134,3 +135,74 @@ def create_child_location(
     db.session.commit()
 
     return child
+
+def update_location(
+    location: Location,
+    name: str,
+    description: str = ""
+) -> Location:
+
+    name = name.strip()
+    description = description.strip()
+
+    if not name:
+        raise ValueError(
+            "Название не может быть пустым."
+        )
+
+    if len(name) > 150:
+        raise ValueError(
+            "Название слишком длинное."
+        )
+
+    if len(description) > 1000:
+        raise ValueError(
+            "Описание слишком длинное."
+        )
+
+    if location.parent_id is None:
+        siblings = get_cabinets()
+    else:
+        siblings = location.parent.children
+
+    if any(
+        sibling.id != location.id
+        and sibling.name.casefold() == name.casefold()
+        for sibling in siblings
+    ):
+        raise ValueError(
+            "Объект с таким названием уже существует."
+        )
+
+    location.name = name
+    location.description = description or None
+
+    db.session.commit()
+
+    return location
+
+def delete_location(location: Location) -> None:
+
+    if location.children:
+        raise ValueError(
+            "Нельзя удалить объект, "
+            "содержащий вложенные места хранения."
+        )
+
+    if location.placements:
+        raise ValueError(
+            "Нельзя удалить объект, "
+            "в котором размещены лекарства."
+        )
+
+    try:
+        db.session.delete(location)
+        db.session.commit()
+
+    except IntegrityError as error:
+        db.session.rollback()
+
+        raise ValueError(
+            "Удаление невозможно: "
+            "объект связан с другими записями."
+        ) from error

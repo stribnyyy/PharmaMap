@@ -4,41 +4,210 @@
     Поиск лекарств — PharmaMap
 {% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for(
+              'static',
+              filename='css/search.css'
+          ) }}">
+{% endblock %}
+
 {% block content %}
 
 <section class="search-panel">
 
-    <span class="subtitle">{{ app_name }}</span>
-
-    <h1>Найдите нужное лекарство</h1>
+    <h1>Поиск лекарств</h1>
 
     <p>
-        Введите название лекарства,
-        чтобы узнать его место хранения.
+        Найдите нужное лекарство и его место хранения
     </p>
 
-    <form method="get" action="{{ url_for('main.index') }}">
+    <form class="medicine-search-form"
+          method="get"
+          action="{{ url_for('main.index') }}">
 
         <input
             type="search"
             name="q"
-            aria-label="Название лекарства"
-            placeholder="Например, Но-шпа"
             value="{{ query }}"
+            placeholder="Название, дозировка или штрихкод"
+            aria-label="Поисковый запрос"
+            maxlength="{{ max_query_length }}"
+            autocomplete="off"
             required
         >
 
-        <button type="submit">Найти</button>
+        <button type="submit">
+            Найти
+        </button>
 
     </form>
 
     {% if query %}
-        <div class="notice">
-            Поисковый запрос: <strong>{{ query }}</strong>.
-            База лекарств пока не подключена.
-        </div>
+        <a class="open-location"
+           href="{{ url_for('main.index') }}">
+            Очистить поиск
+        </a>
     {% endif %}
 
 </section>
+
+
+{% if error %}
+
+    <div class="search-empty" role="alert">
+        {{ error }}
+    </div>
+
+{% elif query %}
+
+    <div class="search-summary">
+
+        <h2>Результаты поиска</h2>
+
+        <p>Найдено препаратов: {{ total }}</p>
+
+        {% if total > results | length %}
+            <p>
+                Показано первых {{ results | length }}.
+                Уточните поисковый запрос.
+            </p>
+        {% endif %}
+
+    </div>
+
+
+    <section class="search-results">
+
+        {% for result in results %}
+
+            {% set medicine = result.medicine %}
+
+            <article class="search-result">
+
+                <div class="search-result-heading">
+
+                    <span class="search-medicine-icon">
+                        💊
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            <a class="location-link"
+                               href="{{ url_for(
+                                   'medicines.detail',
+                                   medicine_id=medicine.id
+                               ) }}">
+                                {{ medicine.name }}
+                                {{ medicine.dosage or "" }}
+                            </a>
+                        </h2>
+
+                        <p>
+                            {{ medicine.form or "" }}
+                            {% if medicine.package_size %}
+                                · {{ medicine.package_size }}
+                            {% endif %}
+                        </p>
+
+                        {% if medicine.barcode %}
+                            <small>
+                                Штрихкод: {{ medicine.barcode }}
+                            </small>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                {% for path in result.paths %}
+
+                    <div class="search-placement">
+
+                        <p class="search-path">
+
+                            {% for item in path %}
+                                {{ item.name }}
+                                {% if not loop.last %}
+                                    →
+                                {% endif %}
+                            {% endfor %}
+
+                        </p>
+
+                        <a class="button-link"
+                           href="{{ url_for(
+                               'storage.layout',
+                               location_id=path[0].id,
+                               focus=path[-1].id,
+                               _anchor='location-' ~ path[-1].id
+                           ) }}">
+                            Показать на схеме
+                        </a>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="search-unplaced">
+
+                        <p>
+                            Место хранения не назначено.
+                        </p>
+
+                        <a class="location-link"
+                           href="{{ url_for(
+                               'medicines.detail',
+                               medicine_id=medicine.id,
+                               _anchor='placements'
+                           ) }}">
+                            Назначить место →
+                        </a>
+
+                    </div>
+
+                {% endfor %}
+
+            </article>
+
+        {% else %}
+
+            <div class="search-empty">
+
+                <h2>Ничего не найдено</h2>
+
+                <p>
+                    Попробуйте изменить название,
+                    дозировку или часть запроса.
+                </p>
+
+                <a class="location-link"
+                   href="{{ url_for('medicines.index') }}">
+                    Перейти в каталог →
+                </a>
+
+            </div>
+
+        {% endfor %}
+
+    </section>
+
+{% else %}
+
+    <section class="search-empty">
+
+        <h2>Введите поисковый запрос</h2>
+
+        <p>
+            Можно искать по названию лекарства,
+            дозировке, форме выпуска,
+            упаковке или штрихкоду.
+        </p>
+
+    </section>
+
+{% endif %}
 
 {% endblock %}

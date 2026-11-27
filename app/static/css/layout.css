@@ -285,3 +285,7 @@
         min-height: 36px;
     }
 }
+
+.layout-node {
+    scroll-margin-top: 20px;
+}

@@ -312,3 +312,101 @@ def move_location(
     return location
 
 from sqlalchemy.exc import IntegrityError
+
+def reorder_location(
+    location: Location,
+    direction: str
+) -> None:
+
+    if direction not in ("earlier", "later"):
+        raise ValueError(
+            "Недопустимое направление перемещения."
+        )
+
+    if location.parent is None:
+        raise ValueError(
+            "Нельзя изменить порядок корневого объекта."
+        )
+
+    siblings = sorted(
+        location.parent.children,
+        key=lambda item: (item.position, item.id)
+    )
+
+    index = siblings.index(location)
+
+    offset = -1 if direction == "earlier" else 1
+
+    new_index = index + offset
+
+    if not 0 <= new_index < len(siblings):
+        raise ValueError(
+            "Объект уже находится на границе списка."
+        )
+
+    siblings[index], siblings[new_index] = (
+        siblings[new_index],
+        siblings[index]
+    )
+
+    for position, item in enumerate(siblings, start=1):
+        item.position = position
+
+    db.session.commit()
+
+def create_slots(
+    parent: Location,
+    count: int
+) -> list[Location]:
+
+    if "slot" not in get_allowed_children(parent):
+        raise ValueError(
+            "В этом объекте нельзя создавать ячейки."
+        )
+
+    if not isinstance(count, int) or not 1 <= count <= 50:
+        raise ValueError(
+            "Количество ячеек должно быть от 1 до 50."
+        )
+
+    children = list(parent.children)
+
+    used_names = {
+        child.name.casefold()
+        for child in children
+    }
+
+    position = max(
+        (child.position for child in children),
+        default=0
+    )
+
+    number = 1
+    slots = []
+
+    for _ in range(count):
+
+        while f"Место {number}".casefold() in used_names:
+            number += 1
+
+        name = f"Место {number}"
+
+        position += 1
+
+        slot = Location(
+            name=name,
+            type="slot",
+            position=position,
+            parent=parent
+        )
+
+        slots.append(slot)
+
+        used_names.add(name.casefold())
+        number += 1
+
+    db.session.add_all(slots)
+    db.session.commit()
+
+    return slots
+

@@ -38,8 +38,163 @@
 
 {% endmacro %}
 
+{% macro render_reorder(node, can_earlier, can_later) %}
 
-{% macro render_node(node) %}
+    {% if node.type != "cabinet" %}
+
+        <form class="reorder-form"
+              method="post"
+              action="{{ url_for(
+                  'storage.layout_reorder',
+                  location_id=node.id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <button
+                type="submit"
+                name="direction"
+                value="earlier"
+                title="Переместить раньше"
+                aria-label="Переместить раньше"
+                {% if not can_earlier %}disabled{% endif %}
+            >
+                {{ "←" if node.type == "slot" else "↑" }}
+            </button>
+
+            <button
+                type="submit"
+                name="direction"
+                value="later"
+                title="Переместить позже"
+                aria-label="Переместить позже"
+                {% if not can_later %}disabled{% endif %}
+            >
+                {{ "→" if node.type == "slot" else "↓" }}
+            </button>
+
+        </form>
+
+    {% endif %}
+
+{% endmacro %}
+
+{% macro render_add_controls(node) %}
+
+    {% set allowed = allowed_children[node.type] %}
+
+    {% if allowed %}
+
+        <div class="editor-tools">
+
+            <details class="quick-add">
+
+                <summary>+ Добавить объект</summary>
+
+                <form class="editor-form"
+                      method="post"
+                      action="{{ url_for(
+                          'storage.layout_add',
+                          location_id=node.id
+                      ) }}">
+
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ csrf_token() }}">
+
+                    <input type="hidden"
+                           name="action"
+                           value="single">
+
+                    <select name="type"
+                            aria-label="Тип объекта">
+
+                        {% for type in allowed %}
+
+                            <option value="{{ type }}">
+                                {{ location_types[type] }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <input type="text"
+                           name="name"
+                           placeholder="Название"
+                           aria-label="Название объекта"
+                           maxlength="150"
+                           required>
+
+                    <button type="submit">
+                        Добавить
+                    </button>
+
+                </form>
+
+            </details>
+
+
+            {% if "slot" in allowed %}
+
+                <details class="quick-add">
+
+                    <summary>+ Несколько ячеек</summary>
+
+                    <form class="editor-form batch-form"
+                          method="post"
+                          action="{{ url_for(
+                              'storage.layout_add',
+                              location_id=node.id
+                          ) }}">
+
+                        <input type="hidden"
+                               name="csrf_token"
+                               value="{{ csrf_token() }}">
+
+                        <input type="hidden"
+                               name="action"
+                               value="batch">
+
+                        <label>
+                            Количество ячеек
+
+                            <input type="number"
+                                   name="count"
+                                   min="1"
+                                   max="50"
+                                   value="5"
+                                   required>
+                        </label>
+
+                        <output class="batch-preview"
+                                aria-live="polite">
+                            Будет создано ячеек: 5
+                        </output>
+
+                        <button type="submit">
+                            Создать ячейки
+                        </button>
+
+                    </form>
+
+                </details>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+{% endmacro %}
+
+{% macro render_node(
+    node,
+    can_earlier=false,
+    can_later=false
+) %}
 
     {% if node.type == "drawer" %}
 
@@ -47,12 +202,10 @@
             id="location-{{ node.id }}"
             class="layout-node layout-drawer
                    {% if node.id == selected_id %}is-selected{% endif %}"
-            {% if node.id in focus_path_ids %}open{% endif %}
+            {% if edit_mode or node.id in focus_path_ids %}open{% endif %}
         >
 
-            <summary>
-                {{ node.name }}
-            </summary>
+            <summary>{{ node.name }}</summary>
 
     {% else %}
 
@@ -80,6 +233,16 @@
             Открыть
         </a>
 
+        {% if edit_mode %}
+
+            {{ render_reorder(
+                node,
+                can_earlier,
+                can_later
+            ) }}
+
+        {% endif %}
+
     </div>
 
 
@@ -93,7 +256,11 @@
             {% for child in node.children
                 | sort(attribute="position,id") %}
 
-                {{ render_node(child) }}
+                {{ render_node(
+                    child,
+                    not loop.first,
+                    not loop.last
+                ) }}
 
             {% endfor %}
 
@@ -104,6 +271,13 @@
         <div class="layout-empty">
             Пусто
         </div>
+
+    {% endif %}
+
+
+    {% if edit_mode %}
+
+        {{ render_add_controls(node) }}
 
     {% endif %}
 
@@ -159,6 +333,30 @@
     </a>
 
 </div>
+<div class="layout-mode-switch">
+
+    <a class="mode-button
+       {% if not edit_mode %}active{% endif %}"
+       href="{{ url_for(
+           'storage.layout',
+           location_id=cabinet.id,
+           focus=selected_id
+       ) }}">
+        Просмотр
+    </a>
+
+    <a class="mode-button
+       {% if edit_mode %}active{% endif %}"
+       href="{{ url_for(
+           'storage.layout',
+           location_id=cabinet.id,
+           edit=1,
+           focus=selected_id
+       ) }}">
+        Редактирование
+    </a>
+
+</div>
 
 
 {% if cabinet.description %}
@@ -193,5 +391,13 @@
     </span>
 
 </div>
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/layout.js'
+    ) }}"
+    defer>
+</script>
 
 {% endblock %}

@@ -356,3 +356,21 @@ footer {
         width: 100%;
     }
 }
+
+.move-information {
+    padding: 18px;
+    background: #edf5f3;
+    border-left: 4px solid #176b60;
+    border-radius: 8px;
+    margin: 20px 0;
+    overflow-wrap: anywhere;
+}
+
+.move-information p {
+    margin: 8px 0;
+}
+
+.location-form select {
+    min-width: 0;
+    max-width: 100%;
+}

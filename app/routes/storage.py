@@ -18,6 +18,8 @@ from app.services.storage import (
     create_child_location,
     update_location,
     delete_location,
+    get_move_targets,
+    move_location,
     LOCATION_TYPES
 )
 
@@ -201,5 +203,70 @@ def delete(location_id):
             location_id=parent_id
         ),
         code=303
+    )
+
+@storage_bp.route(
+    "/<int:location_id>/move",
+    methods=["GET", "POST"]
+)
+def move(location_id):
+
+    location = db.get_or_404(
+        Location,
+        location_id
+    )
+
+    if request.method == "POST":
+
+        parent_id = request.form.get(
+            "parent_id",
+            type=int
+        )
+
+        new_parent = None
+
+        if parent_id is not None and 0 < parent_id <= 2**63 - 1:
+            new_parent = db.session.get(
+                Location,
+                parent_id
+            )
+
+        try:
+            if new_parent is None:
+                raise ValueError(
+                    "Выбранное место хранения не существует."
+                )
+
+            move_location(location, new_parent)
+
+            flash(
+                "Место хранения успешно перемещено.",
+                "success"
+            )
+
+            return redirect(
+                url_for(
+                    "storage.detail",
+                    location_id=location_id
+                ),
+                code=303
+            )
+
+        except ValueError as error:
+            flash(str(error), "error")
+
+            return redirect(
+                url_for(
+                    "storage.move",
+                    location_id=location_id
+                ),
+                code=303
+            )
+
+    return render_template(
+        "storage/move.html",
+        location=location,
+        path=get_location_path(location),
+        targets=get_move_targets(location)
     )
 

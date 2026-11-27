@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Перемещение — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('storage.index') }}">
+        Моя аптека
+    </a>
+
+    {% for item in path %}
+
+        <span>›</span>
+
+        <a href="{{ url_for(
+            'storage.detail',
+            location_id=item.id
+        ) }}">
+            {{ item.name }}
+        </a>
+
+    {% endfor %}
+
+    <span>›</span>
+    <strong>Перемещение</strong>
+
+</nav>
+
+<section class="storage-panel">
+
+    <h1>Перемещение места хранения</h1>
+
+    <h2>{{ location.name }}</h2>
+
+    <div class="move-information">
+
+        <strong>Текущий адрес:</strong>
+
+        <p>
+            {% for item in path %}
+                {{ item.name }}
+                {% if not loop.last %} → {% endif %}
+            {% endfor %}
+        </p>
+
+        <p>
+            Все вложенные объекты и размещённые
+            лекарства будут перемещены вместе
+            с выбранным местом хранения.
+        </p>
+
+    </div>
+
+    {% if targets %}
+
+        <form class="location-form"
+              method="post"
+              action="{{ url_for(
+                  'storage.move',
+                  location_id=location.id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <label for="parent-id">
+                Новое место хранения
+            </label>
+
+            <select id="parent-id"
+                    name="parent_id"
+                    required>
+
+                <option value="" selected disabled>
+                    Выберите место назначения
+                </option>
+
+                {% for target, label in targets %}
+
+                    <option value="{{ target.id }}">
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <div class="location-actions">
+
+                <button type="submit">
+                    Переместить
+                </button>
+
+                <a class="secondary-button"
+                   href="{{ url_for(
+                       'storage.detail',
+                       location_id=location.id
+                   ) }}">
+                    Отмена
+                </a>
+
+            </div>
+
+        </form>
+
+    {% else %}
+
+        <p>
+            Нет доступных мест для перемещения
+            этого объекта.
+        </p>
+
+        <a class="secondary-button"
+           href="{{ url_for(
+               'storage.detail',
+               location_id=location.id
+           ) }}">
+            Вернуться назад
+        </a>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

@@ -206,3 +206,109 @@ def delete_location(location: Location) -> None:
             "Удаление невозможно: "
             "объект связан с другими записями."
         ) from error
+
+def validate_move(
+    location: Location,
+    new_parent: Location
+) -> None:
+
+    if location.type == "cabinet":
+        raise ValueError(
+            "Шкаф нельзя переместить внутрь другого объекта."
+        )
+
+    if location.id == new_parent.id:
+        raise ValueError(
+            "Нельзя переместить объект внутрь самого себя."
+        )
+
+    parent_path = get_location_path(new_parent)
+
+    if any(item.id == location.id for item in parent_path):
+        raise ValueError(
+            "Нельзя переместить объект внутрь его потомка."
+        )
+
+    if location.parent_id == new_parent.id:
+        raise ValueError(
+            "Объект уже находится в этом месте."
+        )
+
+    if location.type not in get_allowed_children(new_parent):
+        raise ValueError(
+            "Недопустимый тип нового родителя."
+        )
+
+    if any(
+        child.id != location.id
+        and child.name.casefold() == location.name.casefold()
+        for child in new_parent.children
+    ):
+        raise ValueError(
+            "В новом месте уже существует объект "
+            "с таким названием."
+        )
+
+def get_move_targets(location: Location):
+
+    if location.type == "cabinet":
+        return []
+
+    statement = db.select(Location).order_by(
+        Location.position,
+        Location.id
+    )
+
+    candidates = db.session.scalars(statement).all()
+
+    targets = []
+
+    for candidate in candidates:
+
+        try:
+            validate_move(location, candidate)
+
+        except ValueError:
+            continue
+
+        path = get_location_path(candidate)
+
+        label = " → ".join(
+            item.name for item in path
+        )
+
+        targets.append((candidate, label))
+
+    return sorted(
+        targets,
+        key=lambda item: item[1].casefold()
+    )
+
+def move_location(
+    location: Location,
+    new_parent: Location
+) -> Location:
+
+    validate_move(location, new_parent)
+
+    new_position = max(
+        (child.position for child in new_parent.children),
+        default=0
+    ) + 1
+
+    try:
+        location.parent = new_parent
+        location.position = new_position
+
+        db.session.commit()
+
+    except IntegrityError as error:
+        db.session.rollback()
+
+        raise ValueError(
+            "Не удалось переместить место хранения."
+        ) from error
+
+    return location
+
+from sqlalchemy.exc import IntegrityError

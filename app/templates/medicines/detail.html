@@ -80,6 +80,163 @@
 
 </section>
 
+<section class="storage-panel" id="placements">
+
+    <h2>Места хранения</h2>
+
+    {% for placement, path in placement_rows %}
+
+        <div class="medicine-placement">
+
+            <p>
+
+                {% for item in path %}
+
+                    {{ item.name }}
+
+                    {% if not loop.last %}
+                        →
+                    {% endif %}
+
+                {% endfor %}
+
+            </p>
+
+            <a class="open-location"
+               href="{{ url_for(
+                   'storage.layout',
+                   location_id=path[0].id,
+                   focus=path[-1].id
+               ) }}">
+                Показать на схеме →
+            </a>
+
+            {% if available_locations %}
+
+                <details class="placement-move">
+
+                    <summary>Перенести лекарство</summary>
+
+                    <form class="location-form"
+                          method="post"
+                          action="{{ url_for(
+                              'medicines.relocate_placement',
+                              medicine_id=medicine.id,
+                              placement_id=placement.id
+                          ) }}">
+
+                        <input type="hidden"
+                               name="csrf_token"
+                               value="{{ csrf_token() }}">
+
+                        <label>
+                            Новое место хранения
+
+                            <select name="location_id"
+                                    required>
+
+                                {% for target, label
+                                    in available_locations %}
+
+                                    <option value="{{ target.id }}">
+                                        {{ label }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </label>
+
+                        <button type="submit">
+                            Перенести
+                        </button>
+
+                    </form>
+
+                </details>
+
+            {% endif %}
+
+            <form class="placement-delete-form"
+                  method="post"
+                  action="{{ url_for(
+                      'medicines.remove_placement',
+                      medicine_id=medicine.id,
+                      placement_id=placement.id
+                  ) }}"
+                  onsubmit="return confirm(
+                      'Удалить это размещение?'
+                  );">
+
+                <input type="hidden"
+                       name="csrf_token"
+                       value="{{ csrf_token() }}">
+
+                <button class="danger-button"
+                        type="submit">
+                    Убрать из этого места
+                </button>
+
+            </form>
+
+        </div>
+
+    {% else %}
+
+        <p>Места хранения пока не назначены.</p>
+
+    {% endfor %}
+
+
+    {% if available_locations %}
+
+        <form class="location-form"
+              method="post"
+              action="{{ url_for(
+                  'medicines.add_placement',
+                  medicine_id=medicine.id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <h3>Назначить новое место</h3>
+
+            <label for="location-id">
+                Место хранения
+            </label>
+
+            <select id="location-id"
+                    name="location_id"
+                    required>
+
+                {% for target, label
+                    in available_locations %}
+
+                    <option value="{{ target.id }}">
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button type="submit">
+                Назначить
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <p>Нет доступных мест для нового назначения.</p>
+
+    {% endif %}
+
+</section>
+
 
 <section class="storage-panel">
 

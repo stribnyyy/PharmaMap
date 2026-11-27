@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% from "storage/_placements.html"
+    import render_placement_controls with context %}
+
 {% block title %}
     Схема: {{ cabinet.name }} — PharmaMap
 {% endblock %}
@@ -235,6 +238,21 @@
 
         {% if edit_mode %}
 
+    <a class="layout-medicine-link"
+       href="{{ url_for(
+           'storage.layout',
+           location_id=cabinet.id,
+           edit=1,
+           focus=node.id,
+           _anchor='placement-editor'
+       ) }}">
+        Лекарства
+    </a>
+
+{% endif %}
+
+        {% if edit_mode %}
+
             {{ render_reorder(
                 node,
                 can_earlier,
@@ -372,6 +390,15 @@
 
 </section>
 
+{% if edit_mode and selected_location %}
+
+    {{ render_placement_controls(
+        selected_location,
+        available_medicines,
+        "layout"
+    ) }}
+
+{% endif %}
 
 <div class="layout-legend">
 

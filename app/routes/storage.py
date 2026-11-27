@@ -29,6 +29,15 @@ from app.services.storage import (
 from flask import abort
 from sqlalchemy.exc import IntegrityError
 
+from app.models import Medicine, Placement
+
+from app.services.placements import (
+    require_object,
+    get_available_medicines,
+    create_placement,
+    delete_placement
+)
+
 storage_bp = Blueprint(
     "storage",
     __name__,
@@ -64,6 +73,22 @@ def create():
 
 @storage_bp.get("/<int:location_id>")
 def detail(location_id):
+
+    location = db.get_or_404(
+        Location,
+        location_id
+    )
+
+    return render_template(
+        "storage/detail.html",
+        location=location,
+        path=get_location_path(location),
+        allowed_types=get_allowed_children(location),
+        location_types=LOCATION_TYPES,
+        available_medicines=get_available_medicines(
+            location
+        )
+    )
 
     location = db.get_or_404(
         Location,
@@ -290,6 +315,7 @@ def layout(location_id):
     focus_id = request.args.get("focus", type=int)
 
     selected_id = None
+    selected_location = None
     focus_path_ids = set()
 
     if focus_id is not None and 0 < focus_id <= 2**63 - 1:
@@ -301,12 +327,21 @@ def layout(location_id):
             path = get_location_path(target)
 
             if path[0].id == cabinet.id:
-
+                selected_location = target
                 selected_id = target.id
                 focus_path_ids = {
                     item.id for item in path
                 }
     edit_mode = request.args.get("edit") == "1"
+
+    available_medicines = []
+
+    if edit_mode and selected_location is not None:
+
+        available_medicines = get_available_medicines(
+            selected_location
+        )
+    
     return render_template(
         "storage/layout.html",
         cabinet=cabinet,
@@ -314,7 +349,9 @@ def layout(location_id):
         focus_path_ids=focus_path_ids,
         location_types=LOCATION_TYPES,
         edit_mode=edit_mode,
-        allowed_children=ALLOWED_CHILDREN
+        allowed_children=ALLOWED_CHILDREN,
+        selected_location=selected_location,
+        available_medicines=available_medicines
     )
 
 @storage_bp.post("/<int:location_id>/layout/reorder")
@@ -426,3 +463,92 @@ def layout_add(location_id):
         ),
         code=303
     )
+
+def redirect_after_placement(location):
+
+    if request.form.get("return_to") == "layout":
+
+        cabinet = get_location_path(location)[0]
+
+        return redirect(
+            url_for(
+                "storage.layout",
+                location_id=cabinet.id,
+                edit=1,
+                focus=location.id,
+                _anchor="placement-editor"
+            ),
+            code=303
+        )
+
+    return redirect(
+        url_for(
+            "storage.detail",
+            location_id=location.id,
+            _anchor="placement-editor"
+        ),
+        code=303
+    )
+
+@storage_bp.post(
+    "/<int:location_id>/medicines/add"
+)
+def assign_medicine(location_id):
+
+    location = db.get_or_404(
+        Location, location_id
+    )
+
+    try:
+
+        medicine = require_object(
+            Medicine,
+            request.form.get(
+                "medicine_id", type=int
+            ),
+            "Лекарство не существует."
+        )
+
+        create_placement(medicine, location)
+
+        flash(
+            "Лекарство назначено месту хранения.",
+            "success"
+        )
+
+    except ValueError as error:
+        flash(str(error), "error")
+
+    return redirect_after_placement(location)
+
+@storage_bp.post(
+    "/<int:location_id>"
+    "/medicines/<int:placement_id>/delete"
+)
+def remove_medicine(location_id, placement_id):
+
+    location = db.get_or_404(
+        Location, location_id
+    )
+
+    placement = db.get_or_404(
+        Placement, placement_id
+    )
+
+    if placement.location_id != location.id:
+        abort(404)
+
+    try:
+
+        delete_placement(placement)
+
+        flash(
+            "Лекарство убрано из места хранения.",
+            "success"
+        )
+
+    except ValueError as error:
+        flash(str(error), "error")
+
+    return redirect_after_placement(location)
+

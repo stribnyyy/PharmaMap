@@ -20,6 +20,17 @@ from app.services.medicines import (
 
 from app.services.storage import get_location_path
 
+from flask import abort
+
+from app.models import Location, Placement
+
+from app.services.placements import (
+    require_object,
+    get_available_locations,
+    create_placement,
+    move_placement,
+    delete_placement
+)
 
 medicines_bp = Blueprint(
     "medicines",
@@ -90,15 +101,21 @@ def detail(medicine_id):
         Medicine, medicine_id
     )
 
-    paths = [
-        get_location_path(placement.location)
+    placement_rows = [
+        (
+            placement,
+            get_location_path(placement.location)
+        )
         for placement in medicine.placements
     ]
 
     return render_template(
         "medicines/detail.html",
         medicine=medicine,
-        paths=paths
+        placement_rows=placement_rows,
+        available_locations=get_available_locations(
+            medicine
+        )
     )
 
 
@@ -181,5 +198,126 @@ def delete(medicine_id):
 
     return redirect(
         url_for("medicines.index"),
+        code=303
+    )
+
+def get_medicine_placement_or_404(
+    medicine_id,
+    placement_id
+):
+
+    placement = db.get_or_404(
+        Placement, placement_id
+    )
+
+    if placement.medicine_id != medicine_id:
+        abort(404)
+
+    return placement
+
+@medicines_bp.post(
+    "/<int:medicine_id>/placements/add"
+)
+def add_placement(medicine_id):
+
+    medicine = db.get_or_404(
+        Medicine, medicine_id
+    )
+
+    try:
+
+        location = require_object(
+            Location,
+            request.form.get(
+                "location_id", type=int
+            ),
+            "Место хранения не существует."
+        )
+
+        create_placement(medicine, location)
+
+        flash(
+            "Место хранения назначено.",
+            "success"
+        )
+
+    except ValueError as error:
+        flash(str(error), "error")
+
+    return redirect(
+        url_for(
+            "medicines.detail",
+            medicine_id=medicine_id
+        ),
+        code=303
+    )
+
+@medicines_bp.post(
+    "/<int:medicine_id>"
+    "/placements/<int:placement_id>/move"
+)
+def relocate_placement(medicine_id, placement_id):
+
+    placement = get_medicine_placement_or_404(
+        medicine_id,
+        placement_id
+    )
+
+    try:
+
+        location = require_object(
+            Location,
+            request.form.get(
+                "location_id", type=int
+            ),
+            "Место хранения не существует."
+        )
+
+        move_placement(placement, location)
+
+        flash(
+            "Размещение успешно изменено.",
+            "success"
+        )
+
+    except ValueError as error:
+        flash(str(error), "error")
+
+    return redirect(
+        url_for(
+            "medicines.detail",
+            medicine_id=medicine_id
+        ),
+        code=303
+    )
+
+@medicines_bp.post(
+    "/<int:medicine_id>"
+    "/placements/<int:placement_id>/delete"
+)
+def remove_placement(medicine_id, placement_id):
+
+    placement = get_medicine_placement_or_404(
+        medicine_id,
+        placement_id
+    )
+
+    try:
+
+        delete_placement(placement)
+
+        flash(
+            "Размещение удалено.",
+            "success"
+        )
+
+    except ValueError as error:
+        flash(str(error), "error")
+
+    return redirect(
+        url_for(
+            "medicines.detail",
+            medicine_id=medicine_id
+        ),
         code=303
     )

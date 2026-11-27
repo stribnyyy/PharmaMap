@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% from "storage/_placements.html"
+    import render_placement_controls with context %}
+
 {% block title %}
     {{ location.name }} — PharmaMap
 {% endblock %}
@@ -223,28 +226,9 @@
 {% endif %}
 
 
-<section class="storage-panel">
-
-    <h2>Лекарства</h2>
-
-    {% for placement in location.placements %}
-
-        <div class="medicine-row">
-
-            <strong>
-                {{ placement.medicine.name }}
-            </strong>
-
-            {{ placement.medicine.dosage or "" }}
-
-        </div>
-
-    {% else %}
-
-        <p>Нет назначенных лекарств.</p>
-
-    {% endfor %}
-
-</section>
+{{ render_placement_controls(
+    location,
+    available_medicines
+) }}
 
 {% endblock %}

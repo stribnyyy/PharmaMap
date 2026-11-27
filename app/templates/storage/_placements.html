@@ -1,0 +1,150 @@
+{% macro render_placement_controls(
+    location,
+    available_medicines,
+    return_to="detail"
+) %}
+
+<section class="storage-panel"
+         id="placement-editor">
+
+    <h2>Лекарства</h2>
+
+    <p class="placement-location-name">
+        {{ location.name }}
+    </p>
+
+    {% for placement in location.placements %}
+
+        <div class="placement-row">
+
+            <div class="placement-medicine-info">
+
+                <a class="location-link"
+                   href="{{ url_for(
+                       'medicines.detail',
+                       medicine_id=placement.medicine.id,
+                       _anchor='placements'
+                   ) }}">
+
+                    <strong>
+                        {{ placement.medicine.name }}
+                    </strong>
+
+                </a>
+
+                <small>
+                    {{ placement.medicine.dosage or "" }}
+                    {{ placement.medicine.form or "" }}
+                    {{ placement.medicine.package_size or "" }}
+                </small>
+
+            </div>
+
+            <form method="post"
+                  class="placement-delete-form"
+                  action="{{ url_for(
+                      'storage.remove_medicine',
+                      location_id=location.id,
+                      placement_id=placement.id
+                  ) }}"
+                  onsubmit="return confirm(
+                      'Убрать лекарство из этого места?'
+                  );">
+
+                <input type="hidden"
+                       name="csrf_token"
+                       value="{{ csrf_token() }}">
+
+                <input type="hidden"
+                       name="return_to"
+                       value="{{ return_to }}">
+
+                <button type="submit"
+                        class="danger-button">
+                    Убрать
+                </button>
+
+            </form>
+
+        </div>
+
+    {% else %}
+
+        <p>Нет назначенных лекарств.</p>
+
+    {% endfor %}
+
+
+    {% if available_medicines %}
+
+        <form class="location-form"
+              method="post"
+              action="{{ url_for(
+                  'storage.assign_medicine',
+                  location_id=location.id
+              ) }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <input type="hidden"
+                   name="return_to"
+                   value="{{ return_to }}">
+
+            <label for="medicine-id">
+                Добавить лекарство
+            </label>
+
+            <select name="medicine_id"
+                    id="medicine-id"
+                    required>
+
+                {% for medicine in available_medicines %}
+
+                    <option value="{{ medicine.id }}">
+
+                        {{ medicine.name }}
+
+                        {% if medicine.dosage %}
+                            · {{ medicine.dosage }}
+                        {% endif %}
+
+                        {% if medicine.form %}
+                            · {{ medicine.form }}
+                        {% endif %}
+
+                        {% if medicine.package_size %}
+                            · {{ medicine.package_size }}
+                        {% endif %}
+
+                        {% if medicine.barcode %}
+                            · {{ medicine.barcode }}
+                        {% endif %}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button type="submit">
+                Назначить лекарство
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <p>Нет доступных лекарств для назначения.</p>
+
+        <a class="open-location"
+           href="{{ url_for('medicines.index') }}">
+            Перейти в каталог →
+        </a>
+
+    {% endif %}
+
+</section>
+
+{% endmacro %}

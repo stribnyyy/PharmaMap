@@ -374,3 +374,81 @@ footer {
     min-width: 0;
     max-width: 100%;
 }
+
+.placement-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #edf5f3;
+    padding: 14px;
+    margin-top: 12px;
+    border-radius: 8px;
+}
+
+.placement-medicine-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.placement-medicine-info small {
+    color: #64748b;
+}
+
+.placement-location-name {
+    font-weight: 500;
+    color: #176b60;
+}
+
+.placement-delete-form {
+    margin: 12px 0 0;
+}
+
+.placement-row .placement-delete-form {
+    margin: 0;
+}
+
+.placement-delete-form button {
+    font-size: 13px;
+    padding: 10px 14px;
+}
+
+.placement-move {
+    margin-top: 14px;
+}
+
+.placement-move summary {
+    cursor: pointer;
+    color: #176b60;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.placement-move label select {
+    margin-top: 8px;
+}
+
+.location-form select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#placement-editor {
+    scroll-margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+
+    .placement-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .placement-delete-form button {
+        width: 100%;
+    }
+}

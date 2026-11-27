@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Лекарство — PharmaMap
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for(
+              'static',
+              filename='css/medicines.css'
+          ) }}">
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('medicines.index') }}">
+        Каталог
+    </a>
+
+    <span>›</span>
+
+    <strong>
+        {{ "Редактирование" if medicine else "Создание" }}
+    </strong>
+
+</nav>
+
+<section class="storage-panel">
+
+    {% if medicine %}
+
+        <h1>Редактирование лекарства</h1>
+
+    {% else %}
+
+        <h1>Добавление лекарства</h1>
+
+    {% endif %}
+
+    <form class="location-form" method="post">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        {% for field, label in fields.items() %}
+
+            <label for="{{ field }}">
+                {{ label }}
+                {% if field == "name" %} * {% endif %}
+            </label>
+
+            <input
+                id="{{ field }}"
+                name="{{ field }}"
+                type="text"
+                value="{{ values.get(field, '') }}"
+                maxlength="{{ limits[field] }}"
+                {% if field == "name" %}required{% endif %}
+            >
+
+        {% endfor %}
+
+        <div class="location-actions">
+
+            <button type="submit">
+                Сохранить
+            </button>
+
+            <a class="secondary-button"
+               href="{{ url_for('medicines.index') }}">
+                Отмена
+            </a>
+
+        </div>
+
+    </form>
+
+    <p>* Обязательное поле</p>
+
+</section>
+
+{% endblock %}

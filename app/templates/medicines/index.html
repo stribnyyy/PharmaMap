@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Каталог лекарств — PharmaMap
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for(
+              'static',
+              filename='css/medicines.css'
+          ) }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+
+    <div>
+        <h1>Каталог лекарств</h1>
+        <span>Всего препаратов: {{ medicines | length }}</span>
+    </div>
+
+    <a class="button-link"
+       href="{{ url_for('medicines.create') }}">
+        + Добавить лекарство
+    </a>
+
+</div>
+
+<section class="medicine-grid">
+
+    {% for medicine in medicines %}
+
+        <article class="medicine-card">
+
+            <div class="medicine-heading">
+
+                <span class="medicine-icon">💊</span>
+
+                <div>
+
+                    <h2>{{ medicine.name }}</h2>
+
+                    <span>{{ medicine.dosage or "" }}</span>
+
+                </div>
+
+            </div>
+
+            <p>{{ medicine.form or "" }}</p>
+
+            <p>{{ medicine.package_size or "" }}</p>
+
+            {% if medicine.barcode %}
+
+                <p>Штрихкод: {{ medicine.barcode }}</p>
+
+            {% endif %}
+
+            <div class="placement-status">
+
+                {% if medicine.placements %}
+
+                    Мест хранения:
+                    {{ medicine.placements | length }}
+
+                {% else %}
+
+                    Место хранения не назначено
+
+                {% endif %}
+
+            </div>
+
+            <a class="open-location"
+               href="{{ url_for(
+                   'medicines.detail',
+                   medicine_id=medicine.id
+               ) }}">
+                Открыть →
+            </a>
+
+        </article>
+
+    {% else %}
+
+        <p>В каталоге пока нет лекарств.</p>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

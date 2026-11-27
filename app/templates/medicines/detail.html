@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ medicine.name }} — PharmaMap
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for(
+              'static',
+              filename='css/medicines.css'
+          ) }}">
+{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('medicines.index') }}">
+        Каталог
+    </a>
+
+    <span>›</span>
+
+    <strong>{{ medicine.name }}</strong>
+
+</nav>
+
+<section class="storage-panel">
+
+    <h1>{{ medicine.name }}</h1>
+
+    <dl class="medicine-properties">
+
+        <dt>Дозировка</dt>
+        <dd>{{ medicine.dosage or "Не указана" }}</dd>
+
+        <dt>Лекарственная форма</dt>
+        <dd>{{ medicine.form or "Не указана" }}</dd>
+
+        <dt>Размер упаковки</dt>
+        <dd>{{ medicine.package_size or "Не указан" }}</dd>
+
+        <dt>Штрихкод</dt>
+        <dd>{{ medicine.barcode or "Не указан" }}</dd>
+
+    </dl>
+
+    <div class="location-actions">
+
+        <a class="button-link"
+           href="{{ url_for(
+               'medicines.edit',
+               medicine_id=medicine.id
+           ) }}">
+            Редактировать
+        </a>
+
+        <form method="post"
+              action="{{ url_for(
+                  'medicines.delete',
+                  medicine_id=medicine.id
+              ) }}"
+              onsubmit="return confirm(
+                  'Удалить это лекарство?'
+              );">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token() }}">
+
+            <button type="submit"
+                    class="danger-button">
+                Удалить
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<section class="storage-panel">
+
+    <h2>Места хранения</h2>
+
+    {% for path in paths %}
+
+        <div class="medicine-placement">
+
+            <p>
+
+                {% for item in path %}
+
+                    {{ item.name }}
+
+                    {% if not loop.last %}
+                        →
+                    {% endif %}
+
+                {% endfor %}
+
+            </p>
+
+            <a class="open-location"
+               href="{{ url_for(
+                   'storage.layout',
+                   location_id=path[0].id,
+                   focus=path[-1].id
+               ) }}">
+                Показать на схеме →
+            </a>
+
+        </div>
+
+    {% else %}
+
+        <p>Места хранения пока не назначены.</p>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

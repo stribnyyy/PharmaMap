@@ -1,5 +1,5 @@
 import sqlite3
-
+from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import event
@@ -16,6 +16,9 @@ db = SQLAlchemy(model_class=Base)
 migrate = Migrate()
 csrf = CSRFProtect()
 
+login_manager = LoginManager()
+
+login_manager.login_view = "auth.login"
 
 @event.listens_for(Engine, "connect")
 def enable_sqlite_foreign_keys(connection, _):

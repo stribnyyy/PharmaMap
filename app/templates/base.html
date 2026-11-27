@@ -21,7 +21,7 @@
     <a class="brand" href="{{ url_for('main.index') }}">
         PharmaMap
     </a>
-
+    {% if current_user.is_authenticated %}
     <nav class="navigation">
         <a href="{{ url_for('main.index') }}">
             Поиск
@@ -34,6 +34,21 @@
     Каталог
 </a>
     </nav>
+    <form class="logout-form"
+      method="post"
+      action="{{ url_for('auth.logout') }}">
+
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
+
+    <button type="submit">
+        Выйти
+    </button>
+
+</form>
+
+{% endif %}
 </header>
 
     <main class="container">

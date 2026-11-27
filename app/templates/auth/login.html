@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Вход — PharmaMap
+{% endblock %}
+
+{% block content %}
+
+<section class="login-panel">
+
+    <div class="login-heading">
+
+        <span class="login-icon">💊</span>
+
+        <h1>Вход в PharmaMap</h1>
+
+        <p>Ваш навигатор по аптеке</p>
+
+    </div>
+
+    <form class="location-form"
+          method="post"
+          action="{{ url_for('auth.login') }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <label for="username">Логин</label>
+
+        <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            required
+            autofocus
+        >
+
+        <label for="password">Пароль</label>
+
+        <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+        >
+
+        <button type="submit">
+            Войти
+        </button>
+
+    </form>
+
+    <p class="login-note">
+        Доступ только для сотрудников аптеки.
+    </p>
+
+</section>
+
+{% endblock %}

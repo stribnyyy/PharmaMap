@@ -47,6 +47,13 @@
    ) }}">
     Открыть →
 </a>
+<a class="open-location"
+   href="{{ url_for(
+       'storage.layout',
+       location_id=cabinet.id
+   ) }}">
+    Показать схему →
+</a>
         </article>
 
     {% else %}

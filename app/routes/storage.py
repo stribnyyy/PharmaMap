@@ -23,6 +23,8 @@ from app.services.storage import (
     LOCATION_TYPES
 )
 
+from flask import abort
+
 storage_bp = Blueprint(
     "storage",
     __name__,
@@ -270,3 +272,41 @@ def move(location_id):
         targets=get_move_targets(location)
     )
 
+@storage_bp.get("/<int:location_id>/layout")
+def layout(location_id):
+
+    cabinet = db.get_or_404(
+        Location,
+        location_id
+    )
+
+    if cabinet.type != "cabinet":
+        abort(404)
+
+    focus_id = request.args.get("focus", type=int)
+
+    selected_id = None
+    focus_path_ids = set()
+
+    if focus_id is not None and 0 < focus_id <= 2**63 - 1:
+
+        target = db.session.get(Location, focus_id)
+
+        if target is not None:
+
+            path = get_location_path(target)
+
+            if path[0].id == cabinet.id:
+
+                selected_id = target.id
+                focus_path_ids = {
+                    item.id for item in path
+                }
+
+    return render_template(
+        "storage/layout.html",
+        cabinet=cabinet,
+        selected_id=selected_id,
+        focus_path_ids=focus_path_ids,
+        location_types=LOCATION_TYPES
+    )

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Схема: {{ cabinet.name }} — PharmaMap
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/layout.css') }}">
+{% endblock %}
+
+
+{% macro render_medicines(node) %}
+
+    {% if node.placements %}
+
+        <div class="layout-medicines">
+
+            {% for placement in node.placements %}
+
+                <div class="layout-medicine">
+
+                    <strong>
+                        {{ placement.medicine.name }}
+                    </strong>
+
+                    <small>
+                        {{ placement.medicine.dosage or "" }}
+                    </small>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endmacro %}
+
+
+{% macro render_node(node) %}
+
+    {% if node.type == "drawer" %}
+
+        <details
+            id="location-{{ node.id }}"
+            class="layout-node layout-drawer
+                   {% if node.id == selected_id %}is-selected{% endif %}"
+            {% if node.id in focus_path_ids %}open{% endif %}
+        >
+
+            <summary>
+                {{ node.name }}
+            </summary>
+
+    {% else %}
+
+        <article
+            id="location-{{ node.id }}"
+            class="layout-node layout-{{ node.type }}
+                   {% if node.id == selected_id %}is-selected{% endif %}"
+        >
+
+    {% endif %}
+
+
+    <div class="layout-node-header">
+
+        {% if node.type != "drawer" %}
+
+            <strong>{{ node.name }}</strong>
+
+        {% endif %}
+
+        <a href="{{ url_for(
+            'storage.detail',
+            location_id=node.id
+        ) }}">
+            Открыть
+        </a>
+
+    </div>
+
+
+    {{ render_medicines(node) }}
+
+
+    {% if node.children %}
+
+        <div class="layout-children">
+
+            {% for child in node.children
+                | sort(attribute="position,id") %}
+
+                {{ render_node(child) }}
+
+            {% endfor %}
+
+        </div>
+
+    {% elif not node.placements %}
+
+        <div class="layout-empty">
+            Пусто
+        </div>
+
+    {% endif %}
+
+
+    {% if node.type == "drawer" %}
+        </details>
+    {% else %}
+        </article>
+    {% endif %}
+
+{% endmacro %}
+
+
+{% block content %}
+
+<nav class="breadcrumbs">
+
+    <a href="{{ url_for('storage.index') }}">
+        Моя аптека
+    </a>
+
+    <span>›</span>
+
+    <a href="{{ url_for(
+        'storage.detail',
+        location_id=cabinet.id
+    ) }}">
+        {{ cabinet.name }}
+    </a>
+
+    <span>›</span>
+    <strong>Схема</strong>
+
+</nav>
+
+
+<div class="page-heading">
+
+    <div>
+
+        <span>Визуальное представление</span>
+
+        <h1>{{ cabinet.name }}</h1>
+
+    </div>
+
+    <a class="secondary-button"
+       href="{{ url_for(
+           'storage.detail',
+           location_id=cabinet.id
+       ) }}">
+        Управление
+    </a>
+
+</div>
+
+
+{% if cabinet.description %}
+
+    <p>{{ cabinet.description }}</p>
+
+{% endif %}
+
+
+<section class="cabinet-layout">
+
+    {{ render_node(cabinet) }}
+
+</section>
+
+
+<div class="layout-legend">
+
+    <span>
+        <i class="legend-empty"></i>
+        Пустое место
+    </span>
+
+    <span>
+        <i class="legend-medicine"></i>
+        Лекарства
+    </span>
+
+    <span>
+        <i class="legend-selected"></i>
+        Выбранный объект
+    </span>
+
+</div>
+
+{% endblock %}
